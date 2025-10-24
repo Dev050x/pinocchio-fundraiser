@@ -7,6 +7,7 @@ use pinocchio::{
 
 use crate::instructions::Instruction;
 
+mod constant;
 mod instructions;
 mod state;
 mod tests;
@@ -30,7 +31,7 @@ pub fn process_instruction(
 
     match Instruction::try_from(discriminator)? {
         Instruction::Initialize => instructions::intialize::process_initialize(accounts, data)?,
-        Instruction::Contribute => instructions::contribute::process_contribute()?,
+        Instruction::Contribute => instructions::contribute::process_contribute(accounts, data)?,
         Instruction::Refund => instructions::refund::process_refund()?,
         _ => return Err(pinocchio::program_error::ProgramError::InvalidInstructionData),
     }
