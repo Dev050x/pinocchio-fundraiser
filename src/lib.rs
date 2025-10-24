@@ -29,7 +29,7 @@ pub fn process_instruction(
         .ok_or(pinocchio::program_error::ProgramError::InvalidInstructionData)?;
 
     match Instruction::try_from(discriminator)? {
-        Instruction::Initialize => instructions::intialize::process_initialize()?,
+        Instruction::Initialize => instructions::intialize::process_initialize(accounts, data)?,
         Instruction::Contribute => instructions::contribute::process_contribute()?,
         Instruction::Refund => instructions::refund::process_refund()?,
         _ => return Err(pinocchio::program_error::ProgramError::InvalidInstructionData),
