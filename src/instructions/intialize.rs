@@ -7,7 +7,7 @@ use pinocchio::{
 };
 use pinocchio_system::instructions::CreateAccount;
 
-use crate::state::FundRaiser;
+use crate::{constant::MIN_AMOUNT_TO_RAISE, state::FundRaiser};
 
 pub fn process_initialize(accounts: &[AccountInfo], data: &[u8]) -> ProgramResult {
     let [maker, mint_to_raise, fundraiser, vault, system_program, token_program, _associated_token_program, _remaining @ ..] =
@@ -19,7 +19,7 @@ pub fn process_initialize(accounts: &[AccountInfo], data: &[u8]) -> ProgramResul
     let amount_to_raise = unsafe { *(data.as_ptr() as *const u64) };
     let duration = unsafe { *(data.as_ptr().add(8) as *const u8) };
 
-    if amount_to_raise < FundRaiser::MIN_AMOUNT_TO_RAISE {
+    if amount_to_raise < MIN_AMOUNT_TO_RAISE {
         return Err(pinocchio::program_error::ProgramError::InvalidArgument);
     }
 
@@ -85,7 +85,7 @@ pub fn process_initialize(accounts: &[AccountInfo], data: &[u8]) -> ProgramResul
 
     {
         // initialize fundraiser account(onchain) check mininum threashold
-        let fundraiser_state = FundRaiser::from_account_info(fundraiser)?;
+        let fundraiser_state = FundRaiser::from_mut_account_info(fundraiser)?;
         fundraiser_state.set_maker(maker.key());
         fundraiser_state.set_mint_to_raise(mint_to_raise.key());
         fundraiser_state.set_amount_to_raise(amount_to_raise);
