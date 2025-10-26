@@ -67,11 +67,20 @@ pub fn process_check_contribution(accounts: &[AccountInfo]) -> ProgramResult {
         let fundraiser_state = FundRaiser::from_account_info(&fundraiser)?;
         let vault_state = pinocchio_token::state::TokenAccount::from_account_info(&vault)?;
 
-        if vault_state.amount() >= fundraiser_state.amount_to_raise()
-            && Clock::get()?.unix_timestamp as u64 - fundraiser_state.time_started()
-                >= fundraiser_state.duration() as u64
+        let vault_amount = vault_state.amount();
+        let amount_to_raise = fundraiser_state.amount_to_raise();
+        let time_started = fundraiser_state.time_started();
+        let duration = fundraiser_state.duration();
+        let bump = fundraiser_state.bump();
+
+        drop(fundraiser_state);
+        drop(vault_state);
+
+        if vault_amount >= amount_to_raise
+            && Clock::get()?.unix_timestamp as u64 - time_started >= duration as u64
         {
-            let bump = [fundraiser_state.bump()];
+
+            let bump = [bump];
             let seed = [
                 Seed::from(b"fundraiser"),
                 Seed::from(maker.key().as_ref()),
@@ -82,7 +91,7 @@ pub fn process_check_contribution(accounts: &[AccountInfo]) -> ProgramResult {
                 from: vault,
                 to: maker_ata,
                 authority: fundraiser,
-                amount: vault_state.amount(),
+                amount: vault_amount,
             }
             .invoke_signed(&[signer_seeds.clone()])?;
 

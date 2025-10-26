@@ -10,7 +10,7 @@ use pinocchio_system::instructions::CreateAccount;
 
 use crate::{
     constant::{MAX_CONTRIBUTION_PERCENTAGE, PERCENTAGE_SCALER},
-    state::{ Contributor, FundRaiser},
+    state::{Contributor, FundRaiser},
 };
 
 pub fn process_contribute(accounts: &[AccountInfo], data: &[u8]) -> ProgramResult {
@@ -27,8 +27,7 @@ pub fn process_contribute(accounts: &[AccountInfo], data: &[u8]) -> ProgramResul
         return Err(pinocchio::program_error::ProgramError::MissingRequiredSignature);
     }
 
-
-    //verify mint_to_raise is same as fundraiser.mint_to_raise -> Need to change mut to read
+    //verify mint_to_raise is same as fundraiser.mint_to_raise
     if fundraiser.lamports() == 0 || fundraiser.data_is_empty() {
         return Err(pinocchio::program_error::ProgramError::InvalidAccountData);
     }
@@ -87,9 +86,7 @@ pub fn process_contribute(accounts: &[AccountInfo], data: &[u8]) -> ProgramResul
             return Err(pinocchio::program_error::ProgramError::InvalidInstructionData);
         }
 
-        
-
-        let contributor_bump_array = [contributor_bump];
+        let contributor_bump_array = [contributor_bump.to_le()];
         let contributor_seed = [
             Seed::from(b"contributor"),
             Seed::from(fundraiser.key().as_ref()),
@@ -115,9 +112,7 @@ pub fn process_contribute(accounts: &[AccountInfo], data: &[u8]) -> ProgramResul
             let contributor_account_state = Contributor::from_account_info(contributor_account)?;
             contributor_account_state.set_amount(0);
         }
-
     }
-
 
     // Check if the maximum contributions per contributor have been reached
     {
@@ -130,7 +125,6 @@ pub fn process_contribute(accounts: &[AccountInfo], data: &[u8]) -> ProgramResul
         }
     }
 
-
     //transfer fund to contributor ata to vault
     pinocchio_token::instructions::Transfer {
         from: contributor_ata,
@@ -140,21 +134,17 @@ pub fn process_contribute(accounts: &[AccountInfo], data: &[u8]) -> ProgramResul
     }
     .invoke()?;
 
-
-
     //update fundraiser account
     {
         let fundraiser_state = FundRaiser::from_mut_account_info(&fundraiser)?;
         fundraiser_state.update_current_amount(amount_to_contribute);
     }
 
-
     //update contributor account
     {
         let contributor_account_state = Contributor::from_account_info(contributor_account)?;
         contributor_account_state.update_amount(amount_to_contribute);
     }
-
 
     Ok(())
 }
