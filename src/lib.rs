@@ -1,5 +1,3 @@
-#![no_std]
-
 use pinocchio::{
     account_info::AccountInfo, default_panic_handler, no_allocator, program_entrypoint,
     pubkey::Pubkey, ProgramResult,
@@ -14,8 +12,8 @@ mod state;
 mod tests;
 
 program_entrypoint!(process_instruction);
-no_allocator!();
 default_panic_handler!();
+no_allocator!();
 
 // Currently Random Program ID
 pinocchio_pubkey::declare_id!("Fg6PaFpoGXkYsidMpWxTWqfQRyQ4aW5n5g5g5g5g5g5g");
