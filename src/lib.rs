@@ -8,6 +8,7 @@ use pinocchio::{
 use crate::instructions::Instruction;
 
 mod constant;
+mod error;
 mod instructions;
 mod state;
 mod tests;
@@ -33,6 +34,9 @@ pub fn process_instruction(
         Instruction::Initialize => instructions::intialize::process_initialize(accounts, data)?,
         Instruction::Contribute => instructions::contribute::process_contribute(accounts, data)?,
         Instruction::Refund => instructions::refund::process_refund()?,
+        Instruction::Check => {
+            instructions::check_contribution::process_check_contribution(accounts)?
+        }
         _ => return Err(pinocchio::program_error::ProgramError::InvalidInstructionData),
     }
 
