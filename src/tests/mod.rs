@@ -29,7 +29,10 @@ mod tests {
         ID as ASSOCIATED_TOKEN_PROGRAM_ID,
     };
 
-    use crate::{constant::SECONDS_TO_DAYS, state::{fundraiser, FundRaiser}};
+    use crate::{
+        constant::SECONDS_TO_DAYS,
+        state::{fundraiser, FundRaiser},
+    };
 
     // const PROGRAM_ID: Pubkey = Pubkey::from(crate::ID);
     fn program_id() -> Pubkey {
@@ -163,12 +166,14 @@ mod tests {
                 panic!("Transaction failed: {:?}", tx.err());
             }
             let tx = tx.unwrap();
-            msg!("Initialize Transaction succeeded with signature: {}", tx.signature);
+            msg!(
+                "Initialize Transaction succeeded with signature: {}",
+                tx.signature
+            );
             msg!("Compute Units Consumed: {}", tx.compute_units_consumed);
         }
 
         pub fn send_contribute_txn(&mut self, amount: u64) {
-
             let contribute_ix_data = [vec![1u8], amount.to_le_bytes().to_vec()].concat();
 
             let contribute_ix = Instruction {
@@ -195,7 +200,10 @@ mod tests {
                 panic!("Transaction failed: {:?}", tx.err());
             }
             let tx = tx.unwrap();
-            msg!("Contribute Transaction succeeded with signature: {}", tx.signature);
+            msg!(
+                "Contribute Transaction succeeded with signature: {}",
+                tx.signature
+            );
             msg!("Compute Units Consumed: {}", tx.compute_units_consumed);
         }
 
@@ -226,14 +234,17 @@ mod tests {
                 panic!("Transaction failed: {:?}", tx.err());
             }
             let tx = tx.unwrap();
-            msg!("Check Transaction succeeded with signature: {}", tx.signature);
+            msg!(
+                "Check Transaction succeeded with signature: {}",
+                tx.signature
+            );
             msg!("Compute Units Consumed: {}", tx.compute_units_consumed);
         }
 
-
-        pub fn change_contributor_and_send_txn (&mut self) {
+        pub fn change_contributor_and_send_txn(&mut self) {
             self.contributor = Keypair::new();
-            self.program.airdrop(&self.contributor.pubkey(), 10 * LAMPORTS_PER_SOL)
+            self.program
+                .airdrop(&self.contributor.pubkey(), 10 * LAMPORTS_PER_SOL)
                 .expect("Airdrop failed");
 
             let contributor_account = Pubkey::find_program_address(
@@ -247,18 +258,24 @@ mod tests {
             self.contributor_account = contributor_account.0;
             msg!("new Contributor account PDA: {}", self.contributor_account);
 
-            let contributor_ata = CreateAssociatedTokenAccount::new(&mut self.program, &self.contributor, &self.mint)
-                .owner(&self.contributor.pubkey())
-                .send()
-                .unwrap();
+            let contributor_ata =
+                CreateAssociatedTokenAccount::new(&mut self.program, &self.contributor, &self.mint)
+                    .owner(&self.contributor.pubkey())
+                    .send()
+                    .unwrap();
             self.contributor_ata = contributor_ata;
-            MintTo::new(&mut self.program, &self.payer, &self.mint, &self.contributor_ata, 100_000_000)
-                .send()
-                .unwrap();
+            MintTo::new(
+                &mut self.program,
+                &self.payer,
+                &self.mint,
+                &self.contributor_ata,
+                100_000_000,
+            )
+            .send()
+            .unwrap();
             msg!("new Contributor ATA: {}", self.contributor_ata);
 
             self.send_contribute_txn(1_000_000);
-
         }
     }
 
@@ -283,7 +300,8 @@ mod tests {
 
         //assert contributor account
         let contributor_ata_data = helper.program.get_account(&helper.contributor_ata).unwrap();
-        let contributor_ata = spl_token::state::Account::unpack(&contributor_ata_data.data).unwrap();
+        let contributor_ata =
+            spl_token::state::Account::unpack(&contributor_ata_data.data).unwrap();
         assert_eq!(contributor_ata.amount, 100_000_000 - 1_000_000);
 
         //assert vault
@@ -299,21 +317,22 @@ mod tests {
         let mut helper = Helper::new();
         helper.send_initialize_txn(10_000_000, 1);
 
+        helper.change_contributor_and_send_txn();
+        helper.change_contributor_and_send_txn();
+        helper.change_contributor_and_send_txn();
+        helper.change_contributor_and_send_txn();
+        helper.change_contributor_and_send_txn();
 
         helper.change_contributor_and_send_txn();
         helper.change_contributor_and_send_txn();
         helper.change_contributor_and_send_txn();
         helper.change_contributor_and_send_txn();
         helper.change_contributor_and_send_txn();
-        
-        helper.change_contributor_and_send_txn();
-        helper.change_contributor_and_send_txn();
-        helper.change_contributor_and_send_txn();
-        helper.change_contributor_and_send_txn();
-        helper.change_contributor_and_send_txn();   
 
         //new clock time
-        let mut clock = helper.program.get_sysvar::<spl_associated_token_account::solana_program::clock::Clock>();
+        let mut clock = helper
+            .program
+            .get_sysvar::<spl_associated_token_account::solana_program::clock::Clock>();
         clock.unix_timestamp += SECONDS_TO_DAYS; // add 2 minutes
         helper.program.set_sysvar(&clock);
         helper.send_check_txn();

@@ -31,7 +31,7 @@ pub fn process_instruction(
     match Instruction::try_from(discriminator)? {
         Instruction::Initialize => instructions::intialize::process_initialize(accounts, data)?,
         Instruction::Contribute => instructions::contribute::process_contribute(accounts, data)?,
-        Instruction::Refund => instructions::refund::process_refund()?,
+        Instruction::Refund => instructions::refund::process_refund(accounts)?,
         Instruction::Check => {
             instructions::check_contribution::process_check_contribution(accounts)?
         }

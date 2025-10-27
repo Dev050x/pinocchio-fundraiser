@@ -79,7 +79,6 @@ pub fn process_check_contribution(accounts: &[AccountInfo]) -> ProgramResult {
         if vault_amount >= amount_to_raise
             && Clock::get()?.unix_timestamp as u64 - time_started >= duration as u64
         {
-
             let bump = [bump];
             let seed = [
                 Seed::from(b"fundraiser"),

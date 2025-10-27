@@ -75,6 +75,12 @@ impl FundRaiser {
         self.current_amount = updated_current_amount.to_le_bytes();
     }
 
+    pub fn subtract_current_amount(&mut self, amount: u64) {
+        let current_amount = u64::from_le_bytes(self.current_amount);
+        let updated_current_amount = current_amount - amount;
+        self.current_amount = updated_current_amount.to_le_bytes();
+    }
+
     pub fn set_time_started(&mut self, timestamp: i64) {
         self.time_started = timestamp.to_le_bytes();
     }
