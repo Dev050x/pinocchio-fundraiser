@@ -97,13 +97,12 @@ pub fn process_refund(accounts: &[AccountInfo]) -> ProgramResult {
         fundraiser_state.subtract_current_amount(amount);
     }
 
-    CloseAccount {
-        account: contributor_account,
-        destination: contributor,
-        authority: contributor,
-    }
-    .invoke()?;
-
+    // CloseAccount {
+    //     account: contributor_account,
+    //     destination: contributor,
+    //     authority: contributor,
+    // }
+    // .invoke()?;
 
     Ok(())
 }

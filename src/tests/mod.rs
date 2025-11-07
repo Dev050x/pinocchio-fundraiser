@@ -277,6 +277,40 @@ mod tests {
 
             self.send_contribute_txn(1_000_000);
         }
+
+        pub fn send_refund_txn(&mut self) {
+            let refund_ix_data = [vec![2u8]].concat();
+
+            let refund_ix = Instruction {
+                program_id: program_id(),
+                accounts: vec![
+                    AccountMeta::new(self.contributor.pubkey(), true),
+                    AccountMeta::new(self.payer.pubkey(), false),
+                    AccountMeta::new(self.mint, false),
+                    AccountMeta::new(self.fundraiser, false),
+                    AccountMeta::new(self.contributor_account, false),
+                    AccountMeta::new(self.contributor_ata, false),
+                    AccountMeta::new(self.vault, false),
+                    AccountMeta::new(self.token_program, false),
+                    AccountMeta::new(self.system_program, false),
+                ],
+                data: refund_ix_data,
+            };
+
+            let message = Message::new(&[refund_ix], Some(&self.contributor.pubkey()));
+            let recent_blockhashes = self.program.latest_blockhash();
+            let transaction = Transaction::new(&[&self.contributor], message, recent_blockhashes);
+            let tx = self.program.send_transaction(transaction);
+            if tx.is_err() {
+                panic!("Transaction failed: {:?}", tx.err());
+            }
+            let tx = tx.unwrap();
+            msg!(
+                "Refund Transaction succeeded with signature: {}",
+                tx.signature
+            );
+            msg!("Compute Units Consumed: {}", tx.compute_units_consumed);
+        }
     }
 
     #[test]
@@ -337,4 +371,27 @@ mod tests {
         helper.program.set_sysvar(&clock);
         helper.send_check_txn();
     }
+
+    #[test]
+    fn test_refund() {
+        let mut helper = Helper::new();
+        helper.send_initialize_txn(10_000_000, 1);
+        helper.send_contribute_txn(1_000_000);
+        let contributor_ata_data = helper.program.get_account(&helper.contributor_ata).unwrap();
+        let contributor_ata =
+            spl_token::state::Account::unpack(&contributor_ata_data.data).unwrap();
+        assert_eq!(contributor_ata.amount, 100_000_000 - 1_000_000);
+        msg!("Contributor ATA before refund: {}", contributor_ata.amount);
+        helper.send_refund_txn();
+
+        //assert contributor account
+        let contributor_ata_data = helper.program.get_account(&helper.contributor_ata).unwrap();
+        let contributor_ata =
+            spl_token::state::Account::unpack(&contributor_ata_data.data).unwrap();
+        msg!("Contributor ATA after refund: {}", contributor_ata.amount);
+        assert_eq!(contributor_ata.amount, 100_000_000);
+
+    }
+
+
 }
